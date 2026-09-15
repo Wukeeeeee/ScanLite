@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 仅 debug 变体：真机取证用的自检页，release 包里不存在 -->
+    <application>
+        <activity
+            android:name=".DiagActivity"
+            android:exported="true"
+            android:label="QR 自检" />
+        <!-- E2E：把线上 ResultScreen 直接起出来，内容由 adb 的 raw extra 注入 -->
+        <activity
+            android:name=".E2eActivity"
+            android:exported="true"
+            android:label="QR E2E"
+            android:excludeFromRecents="true" />
+    </application>
+</manifest>
