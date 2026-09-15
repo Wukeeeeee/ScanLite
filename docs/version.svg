@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 当前版本徽章（自托管，不依赖 shields.io，国内也能正常显示）
+     发新版本时同步改下面的 v1.0 和 width -->
+<svg xmlns="http://www.w3.org/2000/svg" width="62" height="22" viewBox="0 0 62 22" role="img" aria-label="当前版本 v1.0">
+  <title>当前版本 v1.0</title>
+  <rect x="0.5" y="0.5" width="61" height="21" rx="5" fill="#111111" stroke="#3d444d"/>
+  <circle cx="13" cy="11" r="3.5" fill="#3fb950"/>
+  <text x="23" y="15.5"
+        font-family="ui-sans-serif,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="12" font-weight="600" fill="#ffffff">v1.0</text>
+</svg>

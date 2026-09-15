@@ -1,0 +1,12 @@
+# 统一换行符，避免 Windows 上把 shell 脚本写成 CRLF
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.apk binary
+*.keystore binary
