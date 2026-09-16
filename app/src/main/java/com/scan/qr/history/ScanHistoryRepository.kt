@@ -41,18 +41,39 @@ class ScanHistoryRepository(context: Context) {
     }
 
     fun add(content: QrContent) {
-        val item = HistoryItem(
-            id = System.currentTimeMillis(),
-            time = System.currentTimeMillis(),
-            typeLabel = content.type.label,
-            content = content.raw
-        )
-        val list = (listOf(item) + all()).take(MAX)
-        save(list)
+        val now = System.currentTimeMillis()
+        val newItem = JSONObject()
+            .put("id", now)
+            .put("time", now)
+            .put("type", content.type.label)
+            .put("content", content.raw)
+
+        // 直接在 JSONArray 上操作：头部插入新条目，截断到 MAX，一次序列化写入。
+        // 避免"反序列化为 Kotlin 对象列表 → 修改 → 序列化回 JSON"的双重转换。
+        val raw = prefs.getString(KEY, null)
+        val existing = if (raw != null) {
+            try { JSONArray(raw) } catch (e: Exception) { JSONArray() }
+        } else {
+            JSONArray()
+        }
+        val result = JSONArray()
+        result.put(newItem)
+        val limit = (MAX - 1).coerceAtMost(existing.length())
+        for (i in 0 until limit) {
+            result.put(existing.optJSONObject(i) ?: continue)
+        }
+        prefs.edit().putString(KEY, result.toString()).apply()
     }
 
     fun delete(id: Long) {
-        save(all().filterNot { it.id == id })
+        val raw = prefs.getString(KEY, null) ?: return
+        val existing = try { JSONArray(raw) } catch (e: Exception) { return }
+        val result = JSONArray()
+        for (i in 0 until existing.length()) {
+            val obj = existing.optJSONObject(i) ?: continue
+            if (obj.optLong("id") != id) result.put(obj)
+        }
+        prefs.edit().putString(KEY, result.toString()).apply()
     }
 
     fun clear() {

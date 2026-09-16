@@ -20,15 +20,12 @@ fun stampLabel(version: String, installedAt: Long): String =
  * 而这里要看的是"手机上装的这一份"，安装时间能一眼暴露旧包没被替换的问题。
  */
 fun installedStampLabel(context: Context): String {
-    val version = try {
-        context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
+    val info = try {
+        context.packageManager.getPackageInfo(context.packageName, 0)
     } catch (e: Exception) {
-        com.scan.qr.BuildConfig.VERSION_NAME
+        null
     }
-    val installedAt = try {
-        context.packageManager.getPackageInfo(context.packageName, 0).lastUpdateTime
-    } catch (e: Exception) {
-        0L
-    }
-    return stampLabel(version.ifBlank { com.scan.qr.BuildConfig.VERSION_NAME }, installedAt)
+    val version = info?.versionName?.ifBlank { null } ?: com.scan.qr.BuildConfig.VERSION_NAME
+    val installedAt = info?.lastUpdateTime ?: 0L
+    return stampLabel(version, installedAt)
 }

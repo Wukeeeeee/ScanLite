@@ -59,7 +59,7 @@ fun ResultScreen(
     val primaryLabel = plan?.let { planLabel(it) } ?: QrActions.primaryLabel(content)
     // 应用内浏览器选择器：系统选择器在国产 ROM 上只会列出系统浏览器，这里自己列
     var showBrowserPicker by remember { mutableStateOf(false) }
-    val browsers = remember { BrowserPref.listBrowsers(context) }
+    val browsers = remember(content) { BrowserPref.listBrowsers(context) }
     // 应用内「选择其他应用打开」候选。
     // 不能用系统选择器：单一候选时 AOSP 的 ChooserActivity 直接启动、不弹界面，
     // 而 ColorOS 对 http/https 只查得到系统浏览器一个 → 会静默变成「直接用浏览器打开」。
@@ -187,7 +187,10 @@ fun ResultScreen(
                             onClick = {
                                 val r = QrActions.openAlt(context, content, alt)
                                 handleOpenResult(context, r)
-                                if (r == OpenResult.APP_OPENED) {
+                                if (r == OpenResult.OK && alt == AltApp.WECHAT) {
+                                    // URL 在微信内置浏览器中直接打开了
+                                    Toast.makeText(context, "正在用微信打开", Toast.LENGTH_SHORT).show()
+                                } else if (r == OpenResult.APP_OPENED) {
                                     val msg = if (alt == AltApp.WECHAT) {
                                         "内容已复制，请在微信里点「扫一扫」"
                                     } else {

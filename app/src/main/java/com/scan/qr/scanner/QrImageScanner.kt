@@ -22,15 +22,21 @@ data class GalleryScanResult(
     val hits: List<BarcodeHit>
 )
 
+/**
+ * 相册扫描用的进程级共享 scanner（lazy 初始化，永不关闭）。
+ * 与实时扫描的 QrAnalyzer 里的 scanner 分开：QrAnalyzer 绑定了自己的 inFlight 生命周期管理，
+ * 这里只给相册用，避免每次选图都重新加载 ML Kit 模型。
+ */
+private val galleryScanner by lazy { BarcodeScanning.getClient(SCAN_OPTIONS) }
+
 /** 相册图片识别（支持一图多码，二维码与条形码共用 [SCAN_FORMATS]） */
 suspend fun scanImageForQr(context: Context, uri: Uri): GalleryScanResult? =
     withContext(Dispatchers.Default) {
         val bitmap = loadUprightBitmap(context, uri) ?: return@withContext null
-        val scanner = BarcodeScanning.getClient(scanOptions())
         try {
             val latch = CountDownLatch(1)
             var hits: List<BarcodeHit> = emptyList()
-            scanner.process(InputImage.fromBitmap(bitmap, 0))
+            galleryScanner.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { barcodes: List<Barcode> ->
                     hits = barcodes.mapNotNull { barcode ->
                         val value = barcode.rawValue?.takeIf { it.isNotBlank() }
@@ -52,8 +58,6 @@ suspend fun scanImageForQr(context: Context, uri: Uri): GalleryScanResult? =
             GalleryScanResult(bitmap, hits)
         } catch (e: Exception) {
             GalleryScanResult(bitmap, emptyList())
-        } finally {
-            scanner.close()
         }
     }
 

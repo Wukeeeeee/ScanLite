@@ -77,7 +77,7 @@ internal val SCAN_FORMATS = intArrayOf(
 )
 
 /** 实时扫描与相册识别共用同一套码制，避免只改一处导致两条路径行为不一致 */
-internal fun scanOptions(): BarcodeScannerOptions =
+internal val SCAN_OPTIONS: BarcodeScannerOptions =
     BarcodeScannerOptions.Builder()
         .setBarcodeFormats(SCAN_FORMATS[0], *SCAN_FORMATS.drop(1).toIntArray())
         .build()
@@ -86,7 +86,7 @@ class QrAnalyzer(
     private val onResult: (hits: List<BarcodeHit>, contentWidth: Int, contentHeight: Int) -> Unit
 ) : ImageAnalysis.Analyzer {
 
-    private val scanner = BarcodeScanning.getClient(scanOptions())
+    private val scanner = BarcodeScanning.getClient(SCAN_OPTIONS)
 
     /** 在途的 `process()` 帧数。close() 必须等它归零才真正关 scanner */
     private val inFlight = AtomicInteger(0)

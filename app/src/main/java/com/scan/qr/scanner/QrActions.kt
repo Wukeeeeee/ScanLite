@@ -628,6 +628,27 @@ object QrActions {
         return startDirect(context, intent)
     }
 
+    /**
+     * 用微信内置浏览器直接打开 http/https 链接。
+     *
+     * 微信对 http/https 注册了通配的 `ACTION_VIEW` 过滤器，
+     * 对普通 http/https **确实能在内置 WebView 中渲染**（真机验证）。
+     *
+     * 使用场景：用户在结果页点「也可以交给 → 微信」，直接在微信浏览器中打开链接，
+     * 省去"复制 → 手动打开微信 → 扫一扫"的三步。
+     *
+     * ⚠️ 仅对 http/https 有效；微信专属码（u.wechat.com 等）走 [LinkPlan.WeChatCode]，
+     * 不会进这条路径。
+     */
+    fun openInWeChat(context: Context, raw: String): OpenResult {
+        val lower = raw.trim().lowercase()
+        if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+            return OpenResult.NOT_SUPPORTED
+        }
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(raw)).setPackage(PKG_WECHAT)
+        return startDirect(context, intent)
+    }
+
     /** 当前内容的打开计划；没有计划（文本/Wi-Fi 等）返回 null */
     fun linkPlan(context: Context, content: QrContent): LinkPlan? =
         planForContent(
@@ -639,8 +660,8 @@ object QrActions {
 
     /** 该类型是否有“打开/拨打/发送”类主操作 */
     fun hasPrimaryAction(content: QrContent): Boolean = when (content.type) {
-        QrType.URL, QrType.TEL, QrType.SMS, QrType.EMAIL, QrType.GEO, QrType.APP -> true
-        QrType.WIFI, QrType.TEXT, QrType.UNKNOWN -> false
+        QrType.URL, QrType.TEL, QrType.SMS, QrType.EMAIL, QrType.GEO, QrType.APP, QrType.WIFI -> true
+        QrType.TEXT, QrType.UNKNOWN -> false
     }
 
     /** 非链接类的主按钮文案（链接类请用 planLabel(linkPlan(...))） */
@@ -650,6 +671,7 @@ object QrActions {
         QrType.SMS -> "发送短信"
         QrType.EMAIL -> "发送邮件"
         QrType.GEO -> "打开地图"
+        QrType.WIFI -> "连接 Wi-Fi"
         QrType.APP -> appNameForContent(content.raw)?.let { "用${it}打开" } ?: "打开"
         else -> ""
     }
@@ -697,6 +719,11 @@ object QrActions {
      * 全流程只用 Android 正规 Intent / PackageManager，不做任何破解或绕过。
      */
     fun open(context: Context, content: QrContent): OpenResult {
+        if (content.type == QrType.WIFI) {
+            val wifi = content.wifi ?: return OpenResult.NOT_SUPPORTED
+            return connectToWifi(context, wifi)
+        }
+
         val intent = buildIntent(content) ?: return OpenResult.NOT_SUPPORTED
         // 链接类：把「通配 http 但打不开网页」的 App（微信等）从选择器里剔掉
         val exclude = webExclusions(context, content)
@@ -791,8 +818,21 @@ object QrActions {
         }
 
         AltApp.WECHAT -> {
-            copyToClipboard(context, content.raw)
-            launchApp(context, PKG_WECHAT)
+            // 普通 URL：优先用微信内置浏览器直接打开（ACTION_VIEW + setPackage），
+            // 比"复制 + 手动扫一扫"体验好得多。
+            // 微信专属域名不走这里（planForContent 已把它归入 WeChatCode，不会出现在 altApps 中）。
+            if (content.type == QrType.URL) {
+                val direct = openInWeChat(context, content.raw)
+                if (direct == OpenResult.OK) direct
+                else {
+                    // 微信拒绝了这个 URL → 回退到老路：复制 + 拉起微信
+                    copyToClipboard(context, content.raw)
+                    launchApp(context, PKG_WECHAT)
+                }
+            } else {
+                copyToClipboard(context, content.raw)
+                launchApp(context, PKG_WECHAT)
+            }
         }
     }
 

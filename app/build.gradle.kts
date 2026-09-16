@@ -11,9 +11,9 @@ android {
     defaultConfig {
         applicationId = "com.scan.qr"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 4
-        versionName = "1.1"
+        targetSdk = 35
+        versionCode = 5
+        versionName = "1.3"
     }
 
     // release 也复用 debug 签名：与之前交付的 debug 包**同一张证书**，
