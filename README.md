@@ -37,7 +37,7 @@
 
 ## 下载安装
 
-1. 到 [Releases](../../releases/latest) 下载 `ScanLite-1.0.apk`
+1. 到 [Releases](../../releases/latest) 下载 `ScanLite-1.1.apk`
 2. 手机点开安装；首次需要允许「安装未知来源的应用」
 3. 系统要求：**Android 8.0（API 26）及以上**
 

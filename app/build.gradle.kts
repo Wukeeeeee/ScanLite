@@ -12,8 +12,8 @@ android {
         applicationId = "com.scan.qr"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.0"
+        versionCode = 4
+        versionName = "1.1"
     }
 
     // release 也复用 debug 签名：与之前交付的 debug 包**同一张证书**，
